@@ -1,0 +1,71 @@
+Infrastructure Design for www.foobar.com
+The infrastructure will include the following components:
+
+Load Balancer (HAProxy): Distributes incoming traffic to web servers.
+Web Server (Nginx): Serves static content and forwards dynamic requests to the application server.
+Application Server: Hosts the application logic and processes dynamic requests.
+Database (MySQL): Stores persistent data.
+Codebase: The application files shared between the servers.
+Infrastructure Diagram (Visualized on a whiteboard)
+Below is the conceptual layout:
+
+sql
+Copy code
+                Users
+                  |
+                  v
+          +----------------+
+          | Load Balancer  |
+          |    (HAProxy)   |
+          +----------------+
+            |          |
+     +-------------+ +-------------+
+     | Web Server  | | Web Server  |
+     |   (Nginx)   | |   (Nginx)   |
+     +-------------+ +-------------+
+            |          |
+          +----------------+
+          | App Server (2x)|  
+          |  (App Logic)   |
+          +----------------+
+                  |
+          +----------------+
+          | Database (MySQL)|  
+          | Primary & Replica|
+          +----------------+
+Components and Rationale
+Load Balancer (HAProxy):
+
+Why: Handles high traffic, ensures fault tolerance, and prevents overloading of servers.
+Algorithm:
+Configured with a Round Robin algorithm (alternates requests across servers sequentially). This ensures equal distribution of traffic.
+Active-Active vs. Active-Passive:
+This setup uses Active-Active, meaning all web servers are actively handling traffic. In an Active-Passive setup, one server acts as a backup.
+Web Server (Nginx):
+
+Why: Efficient at serving static files (CSS, JS, images) and reverse-proxying dynamic content to the application server.
+Application Server:
+
+Why: Processes business logic, executes the core application code, and connects to the database for data.
+Database (MySQL Primary-Replica Cluster):
+
+Why: Ensures data availability and read performance through replication.
+How it works: The Primary node handles writes and pushes changes to the Replica node, which handles read requests. This separation improves performance.
+Difference:
+Primary Node: Handles both read and write operations. Ensures data consistency.
+Replica Node: Handles only read operations to reduce load on the primary.
+Codebase:
+
+Why: The application code is synchronized across servers to ensure consistency.
+Infrastructure Issues
+Single Points of Failure (SPOF):
+
+The database Primary node is a SPOF; if it fails, writes stop unless a failover mechanism is implemented.
+Load balancer failure would disrupt the entire infrastructure.
+Security Concerns:
+
+No firewall to filter malicious traffic.
+Communication isn't encrypted (lacks HTTPS).
+Monitoring:
+
+Absence of monitoring tools like Prometheus or Nagios makes it challenging to detect failures or performance issues.
