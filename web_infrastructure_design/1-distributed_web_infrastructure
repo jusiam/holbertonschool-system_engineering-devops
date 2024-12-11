@@ -9,8 +9,7 @@ Codebase: The application files shared between the servers.
 Infrastructure Diagram (Visualized on a whiteboard)
 Below is the conceptual layout:
 
-sql
-Copy code
+
                 Users
                   |
                   v
