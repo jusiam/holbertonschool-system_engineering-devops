@@ -1,0 +1,92 @@
+Infrastructure Diagram
+
+                Users
+                  |
+                  v
+        +--------------------+
+        | Firewall #1        |
+        +--------------------+
+                  |
+                  v
+        +--------------------+
+        | Load Balancer      |
+        | (HAProxy, HTTPS)   |
+        +--------------------+
+                  |
+       +---------------------+
+       |                     |
++----------------+   +----------------+
+| Firewall #2    |   | Firewall #3    |
++----------------+   +----------------+
+       |                     |
++----------------+   +----------------+
+| Web Server 1   |   | Web Server 2   |
+| (Nginx, HTTPS) |   | (Nginx, HTTPS) |
++----------------+   +----------------+
+       |                     |
++-----------------------------+
+|       Application Server    |
+|       (App Logic)           |
++-----------------------------+
+                  |
+        +---------------------+
+        | Database Cluster    |
+        | Primary & Replica   |
+        +---------------------+
+Components and Rationale
+Firewalls (3 Instances):
+
+Why: Protect each layer of the infrastructure:
+Firewall #1: Filters traffic between the internet and the load balancer.
+Firewall #2 & #3: Filters traffic between the load balancer and individual web servers.
+Purpose: Blocks unauthorized or malicious traffic, prevents DDoS attacks, and restricts server access to specific IP ranges and ports.
+SSL Certificate (HTTPS):
+
+Why: Encrypts traffic between users and the website to secure sensitive data and prevent interception.
+Where: Configured at both the load balancer (for initial decryption) and web servers (end-to-end encryption).
+Monitoring Clients (e.g., Sumo Logic):
+
+Why: Tracks performance, uptime, and system health across all components.
+How It Works:
+A lightweight monitoring agent (data collector) is installed on each server.
+Agents collect logs, metrics, and system statistics, which are sent to a centralized monitoring service.
+Purpose: Enables real-time alerts and historical analysis to identify and resolve issues promptly.
+Load Balancer (HAProxy):
+
+Why: Balances traffic across web servers to prevent overload.
+SSL Termination Issue: Terminating SSL at the load balancer creates a potential weak point if unencrypted traffic continues between the load balancer and servers. Use end-to-end encryption for enhanced security.
+Database Cluster (Primary & Replica):
+
+Why: Separates read and write operations to optimize performance and ensure data redundancy.
+Issue: Only one MySQL server accepts writes, which introduces a SPOF. Use automatic failover mechanisms (e.g., MySQL Group Replication).
+Specific Questions
+Why Serve Traffic Over HTTPS?
+Data Security: Encrypts sensitive user data (e.g., login credentials, personal info).
+Trust: Builds user trust by displaying a secure lock icon in browsers.
+SEO Benefits: Search engines like Google prioritize HTTPS websites in rankings.
+What Is Monitoring Used For?
+Tracks performance metrics (CPU, memory, disk usage).
+Detects failures or potential issues.
+Provides alerts for downtime or abnormal behavior.
+How to Monitor Web Server QPS?
+Steps:
+Use a monitoring tool like Sumo Logic or Prometheus.
+Configure the monitoring client to track web server logs (e.g., Nginx access logs).
+Extract metrics for the number of requests per second (QPS) from these logs.
+Visualize the data in a dashboard for real-time insights.
+Why Are Unified Servers Problematic?
+Explanation: If servers contain all components (database, web server, application server), a failure impacts all functions simultaneously.
+Solution: Separate components into dedicated servers to ensure modularity and fault isolation.
+Infrastructure Issues
+Terminating SSL at the Load Balancer Level:
+
+Problem: If SSL is terminated at the load balancer, traffic between the load balancer and backend servers may remain unencrypted, posing a security risk.
+Solution: Use end-to-end encryption to maintain secure communication throughout the infrastructure.
+Single MySQL Write Server:
+
+Problem: Having only one writable MySQL server introduces a SPOF. If it fails, write operations cease.
+Solution: Implement multi-primary replication or automated failover systems.
+Unified Server Architecture:
+
+Problem: Combining database, web server, and application server on one machine limits scalability, creates SPOFs, and increases maintenance complexity.
+Solution: Use a distributed architecture with dedicated servers for each role.
